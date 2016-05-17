@@ -111,6 +111,8 @@ void CommandLine::parse_cmdline(int argc, const char *argv[]) {
 
 void CommandLine::parse_cmdline(const std::string& input) {
     
+    zeroVariables();
+    
     std::string cmdline = input;
     if (cmdline.find("://") != std::string::npos) {
         std::vector<std::string> url_items;
@@ -134,8 +136,6 @@ void CommandLine::parse_cmdline(const std::string& input) {
     ("join,j", construct_value<std::string>(&_wstrMeetingID, "meetingId"), "join a meeting")
     ("studio", "start a studio recording")
     ("s", construct_value<std::vector<std::string> >(&credentials, "login password")->multitoken(), "provide credentials to host meeting")
-    ("s1", value<std::string>(&_wstrSecurityToken), "provide security token to host meeting")
-    ("t", construct_value<std::vector<std::string> >(&host_access_token, "subscriptionId accessToken")->multitoken(), "provide account access token to host meeting")
     (",n", construct_value<std::string>(&_wstrUserName, "\"firstName lastName\""), "sets special name\nshould be used with -s and --join commands")
     (",e", value<std::string>(&_wstrUserEmail), "sets email address\nshould be used with --join")
     (",l", value<bool>(&_bLeaveMeeting)->zero_tokens(), "leave meeting")
@@ -144,15 +144,20 @@ void CommandLine::parse_cmdline(const std::string& input) {
     
     options_description hidden("Hidden options");
     hidden.add_options()
+    ("s1", value<std::string>(&_wstrSecurityToken), "provide security token to host meeting")
+    ("t", construct_value<std::vector<std::string> >(&host_access_token, "subscriptionId accessToken")->multitoken(), "provide account access token to host meeting")
     (",u", value<int>(&_updateCode), "self-update result code (provided by installer)")
     ("st", value<std::string>(), "provide shared token")
     ("shared_token", value<std::string>(), "provide shared token")
-    (",r", value<std::vector<std::string> >(&call_replacement)->multitoken(), "provide call replacement details")
+    (",r", construct_value<std::vector<std::string> >(&call_replacement, "sessionId sessionKey")->multitoken(), "provide call replacement details")
     (",b", value<bool>()->zero_tokens(), "start broadcast automatically")
     ;
     
-    options_description visible("Allowed Options");
-    visible.add(generic).add(session).add(hidden);
+    options_description all("Allowed Options");
+    all.add(generic).add(session).add(hidden);
+    
+    options_description visible;
+    visible.add(generic).add(session);
     
     variables_map vm;
     
@@ -163,7 +168,7 @@ void CommandLine::parse_cmdline(const std::string& input) {
 #endif
     
     store(command_line_parser(pars_str)
-          .options(visible)
+          .options(all)
           .style(
                  command_line_style::unix_style |
                  command_line_style::allow_long_disguise).run(),
@@ -172,10 +177,6 @@ void CommandLine::parse_cmdline(const std::string& input) {
     
     if (vm.count("help"))
         std::cout << visible << '\n';
-    
-    zeroVariables();
-    
-    _eCommandType = PARS_SHOW_LOGIN_FORM;
     
     if (!validate_options(vm)) {
         _eErrorCode = eWrongCommand;

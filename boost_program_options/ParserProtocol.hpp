@@ -62,7 +62,7 @@ public:
     
     unsigned int GetSessionId() const { return _iSessionId; }
     unsigned int GetSessionKey() const { return _iSessionKey; }
-
+    
     bool IsBroadcastEnabled() const { return _bIsBroadcastEnabled;}
     bool IsLeaveMeeting() const {return _bLeaveMeeting; } //true - if passed parameter -l (leave meeting)
     
@@ -82,12 +82,15 @@ public:
         _iSessionId = 0;
         _iSessionKey = 0;
         _bIsBroadcastEnabled = false;
-        _eCommandType = PARS_UNKNOWN;
+        _eCommandType = PARS_SHOW_LOGIN_FORM;
         _eErrorCode = eNoError;
         _eLoginAction = eNone;
         _updateCode = -1;
         _bShowWhatsNew = false;
         _bShowUpdateBalloon = false;
+        _bLeaveMeeting = false;
+        _bPrintHelp = false;
+        _bRememberCredentials = false;
     }
     
 protected:

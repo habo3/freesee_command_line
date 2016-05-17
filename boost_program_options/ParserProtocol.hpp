@@ -71,6 +71,7 @@ public:
     int     GetUpdateCode() const { return _updateCode; }
     bool	ShowWhatsNew() const { return _bShowWhatsNew; } // true if runs immediately after update
     bool	ShowBalloon() const {return	_bShowUpdateBalloon; }	//true if show update balloon
+    bool	ShouldSaveCredentials()	const { return _bRememberCredentials; } // true if we should save the successfulll credentials
     
     void zeroVariables() {
         _iConnectPort = 0;
@@ -108,6 +109,7 @@ protected:
     bool _bIsBroadcastEnabled;
     bool _bShowWhatsNew;
     bool _bShowUpdateBalloon;
+    bool _bRememberCredentials;
     
     EParseLine _eCommandType;
     EErrorCodes _eErrorCode;

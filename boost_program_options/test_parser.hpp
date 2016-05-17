@@ -13,6 +13,8 @@ public:
         _bShowWhatsNew = node.get<bool>("showWhatsNew", false);
         _bShowUpdateBalloon = node.get<bool>("showUpdateBalloon", false);
         _bIsBroadcastEnabled = node.get<bool>("isBroadcastEnabled", false);
+        _bRememberCredentials = node.get<bool>("rememberCredentials", false);
+
         _iSessionId = node.get<int>("sessionId", 0);
         _iSessionKey = node.get<int>("sessionKey", 0);
         _iConnectPort = node.get<int>("connectPort", 0);
@@ -68,6 +70,7 @@ public:
         && (!has("updateCode") || _updateCode == n.GetUpdateCode())
         && (!has("showWhatsNew") || _bShowWhatsNew == n.ShowWhatsNew())
         && (!has("showUpdateBalloon") || _bShowUpdateBalloon == n.ShowBalloon())
+        && (!has("rememberCredentials") || _bRememberCredentials == n.ShouldSaveCredentials())
         );
         
     }

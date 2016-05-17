@@ -58,15 +58,7 @@ bool validate_options(variables_map& vm) {
     return true;
 }
 
-void CommandLine::parse_cmdline(int argc, const char *argv[]) {
-    std::stringstream ss;
-    for (size_t i = 1; i < argc; ++i) {
-        ss << argv[i] << ' ';
-    }
-    
-    parse_cmdline(ss.str());
-}
-
+#pragma mark - validation helpers
 bool is_urlscheme(const std::string& string) {
     return string.find("://") != std::string::npos;
 }
@@ -88,8 +80,8 @@ bool is_email(const std::string& email)
 {
     static const int MAX_EMAIL_LENGTH = 254;
     const boost::regex regex(
-                       "[a-zA-Z0-9_\\-\\.]+@([a-zA-Z0-9_\\-]+\\.)+[a-zA-Z]{2,4}"
-                       );
+                             "[a-zA-Z0-9_\\-\\.]+@([a-zA-Z0-9_\\-]+\\.)+[a-zA-Z]{2,4}"
+                             );
     
     return (boost::regex_match(email, regex) && MAX_EMAIL_LENGTH > email.size());
 }
@@ -105,6 +97,16 @@ bool is_name(const std::string& name)
 bool is_meeting_id(const std::string& meeting)
 {
     return !meeting.empty();
+}
+
+#pragma mark - parser implementaion
+void CommandLine::parse_cmdline(int argc, const char *argv[]) {
+    std::stringstream ss;
+    for (size_t i = 1; i < argc; ++i) {
+        ss << argv[i] << ' ';
+    }
+    
+    parse_cmdline(ss.str());
 }
 
 void CommandLine::parse_cmdline(const std::string& input) {
@@ -124,6 +126,7 @@ void CommandLine::parse_cmdline(const std::string& input) {
     
     std::vector<std::string> credentials;
     std::vector<std::string> call_replacement;
+    std::vector<std::string> host_access_token;
     
     options_description session("Conferencing options");
     session.add_options()
@@ -132,11 +135,11 @@ void CommandLine::parse_cmdline(const std::string& input) {
     ("studio", "start a studio recording")
     ("s", construct_value<std::vector<std::string> >(&credentials, "login password")->multitoken(), "provide credentials to host meeting")
     ("s1", value<std::string>(&_wstrSecurityToken), "provide security token to host meeting")
-    ("t", value<std::vector<std::string> >()->multitoken(), "provide account access token to host meeting")
+    ("t", construct_value<std::vector<std::string> >(&host_access_token, "subscriptionId accessToken")->multitoken(), "provide account access token to host meeting")
     (",n", construct_value<std::string>(&_wstrUserName, "\"firstName lastName\""), "sets special name\nshould be used with -s and --join commands")
     (",e", value<std::string>(&_wstrUserEmail), "sets email address\nshould be used with --join")
     (",l", value<bool>()->zero_tokens(), "leave meeting")
-    (",p", value<bool>()->zero_tokens(), "persist user related input")
+    (",p", value<bool>(&_bRememberCredentials)->zero_tokens(), "persist user related input")
     ;
     
     options_description hidden("Hidden options");
@@ -200,11 +203,10 @@ void CommandLine::parse_cmdline(const std::string& input) {
     
     if (vm.count("s1")) {
         std::string strToken = vm["s1"].as<std::string>();
-        //assert( strToken.empty() );
         
         std::string login;
         std::string password;
-
+        
         try {
             std::string sContent = base64_decode(strToken.c_str());
             size_t first_space = sContent.find_first_of(" ");
@@ -236,7 +238,7 @@ void CommandLine::parse_cmdline(const std::string& input) {
             _wstrPass = is_password(password) ? password : "";
         }
     }
-
+    
     if (vm.count("host")) {
         
         if (vm.count("s")) {
@@ -249,6 +251,15 @@ void CommandLine::parse_cmdline(const std::string& input) {
         if (vm.count("s1")) {
             _eCommandType = PARS_HOST;
             _eLoginAction = eHost;
+        }
+        
+        if (vm.count("t")) {
+            if (host_access_token.size() == 2) {
+                _wstrSubscriptionId = host_access_token[0];
+                _wstrAccessToken = host_access_token[1];
+                _eCommandType = PARS_HOST_TOKEN;
+                _eLoginAction = eHost;
+            }
         }
         
         if (_eLoginAction == eNone && _eCommandType != PARS_LEAVE)

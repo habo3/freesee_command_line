@@ -106,7 +106,6 @@ private:
 	bool _bShowJoin;
 	bool _bShowHost;
 	bool _bIsUpdateInfo;
-	bool _bRememberCredentials;
 	bool skip_get_from_string;
     
 	//IPC and additional commands 

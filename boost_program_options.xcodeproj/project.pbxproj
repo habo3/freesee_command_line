@@ -39,6 +39,11 @@
 		7308A1981CE4D157005FC929 /* new_cmd_parser.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = new_cmd_parser.cpp; sourceTree = "<group>"; };
 		7308A1991CE4D157005FC929 /* new_cmd_parser.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = new_cmd_parser.hpp; sourceTree = "<group>"; };
 		7308A19B1CE4D916005FC929 /* ParserProtocol.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = ParserProtocol.hpp; sourceTree = "<group>"; };
+		73D8A42D1CE9FA76002C9353 /* parse_command_enum.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = parse_command_enum.h; sourceTree = "<group>"; };
+		73D8A42E1CE9FD48002C9353 /* parse_action_enum.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = parse_action_enum.h; sourceTree = "<group>"; };
+		73D8A4301CE9FD86002C9353 /* parse_error_enum.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = parse_error_enum.h; sourceTree = "<group>"; };
+		73D8A4311CEA17EE002C9353 /* test_parser.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = test_parser.hpp; sourceTree = "<group>"; };
+		73D8A4351CEB1A3D002C9353 /* test_case.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = test_case.json; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -75,6 +80,8 @@
 		7308A1861CE48826005FC929 /* boost_program_options */ = {
 			isa = PBXGroup;
 			children = (
+				73D8A42F1CE9FD4F002C9353 /* enums */,
+				73D8A42B1CE9EA30002C9353 /* tests */,
 				7308A1931CE4D041005FC929 /* Base64.cxx */,
 				7308A1941CE4D041005FC929 /* Base64.hxx */,
 				7308A1901CE4D01B005FC929 /* CommandLinePars.cpp */,
@@ -83,8 +90,27 @@
 				7308A1981CE4D157005FC929 /* new_cmd_parser.cpp */,
 				7308A1991CE4D157005FC929 /* new_cmd_parser.hpp */,
 				7308A19B1CE4D916005FC929 /* ParserProtocol.hpp */,
+				73D8A4311CEA17EE002C9353 /* test_parser.hpp */,
 			);
 			path = boost_program_options;
+			sourceTree = "<group>";
+		};
+		73D8A42B1CE9EA30002C9353 /* tests */ = {
+			isa = PBXGroup;
+			children = (
+				73D8A4351CEB1A3D002C9353 /* test_case.json */,
+			);
+			name = tests;
+			sourceTree = "<group>";
+		};
+		73D8A42F1CE9FD4F002C9353 /* enums */ = {
+			isa = PBXGroup;
+			children = (
+				73D8A42D1CE9FA76002C9353 /* parse_command_enum.h */,
+				73D8A42E1CE9FD48002C9353 /* parse_action_enum.h */,
+				73D8A4301CE9FD86002C9353 /* parse_error_enum.h */,
+			);
+			name = enums;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -279,6 +305,7 @@
 				7308A18D1CE48826005FC929 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};

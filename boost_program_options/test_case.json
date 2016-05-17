@@ -22,7 +22,7 @@
 			"sessionId"   : 0,
 			"sessionKey"  : 0,
 
-			"commandType" : "PARS_HOST|PARS_JOIN|PARS_STUDIO|PARS_NONE",
+			"commandType" : "PARS_HOST|PARS_JOIN|PARS_STUDIO|PARS_NONE|PARS_HOST_TOKEN",
 			"loginAction" : "eHost|eStudio|eJoin|eNone",
 			"errorCode"	  : "eWrongHostParameters|eWrongJoinParameters|eWrongCommand|eNoError"			
 		}
@@ -222,12 +222,23 @@
 			"result" :  {
 				"meetingId" : "meeting_id"
 			}
-		}	
+		},
 
+		{
+			"input": "-p",
+			"result" : {
+				"rememberCredentials" : true
+			}
+		},
 
-
-
-
+		{
+			"input": "--host -t 1234 1234",
+			"result" : {
+				"subscriptionId" : "1234",
+				"accessToken" : "1234",
+				"commandType" : "PARS_HOST_TOKEN"
+			}
+		}
 
 	]
 }

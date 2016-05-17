@@ -45,6 +45,8 @@ public:
 #undef ADD
     };
     
+    bool	DoHelp() const { return _bPrintHelp; };		//true if passed -h for print help information
+    
     StringType GetSbcParameter() const { return _wstrSbcParameter; }
     
     StringType GetName() const { return _wstrUserName; }
@@ -113,6 +115,7 @@ protected:
     bool _bShowUpdateBalloon;
     bool _bRememberCredentials;
     bool _bLeaveMeeting;
+    bool _bPrintHelp;
     
     EParseLine _eCommandType;
     EErrorCodes _eErrorCode;

@@ -122,7 +122,7 @@ void CommandLine::parse_cmdline(const std::string& input) {
     
     options_description generic("Generic options");
     generic.add_options()
-    ("help,h", "Help screen");
+    ("help,h", value<bool>(&_bPrintHelp)->zero_tokens(), "Help screen");
     
     std::vector<std::string> credentials;
     std::vector<std::string> call_replacement;

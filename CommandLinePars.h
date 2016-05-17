@@ -46,7 +46,6 @@ public:
 	bool	IsCommandLine()	{return _bIsCommandLine; }		//true if from command line was passed parameters
 	bool	IsParsedComm()	{return _bIsParsedComm; }		//true if all parameters from comline was parsed successfully
 	bool	IsQAServer()	{return _bIsQAServer; }		//true if it is QA server used
-	bool	DoHelp()		{return _bPrintHelp; };		//true if passed -h for print help information
 	void	WhatsNewShown() { _bShowWhatsNew = false; }
 	void	BalloonShowed()	{ _bShowUpdateBalloon = false; }
 	bool	ShouldSaveCredentials()	{return _bRememberCredentials; } // true if we should save the successfulll credentials
@@ -97,7 +96,6 @@ private:
 	bool _bIsParsedComm;
 	bool _bIsQAServer;
 	bool _bMinimizeToTray;
-	bool _bPrintHelp;
 	bool _bIsProcessedCommand;
 	bool _bIsRCEnabled;
    

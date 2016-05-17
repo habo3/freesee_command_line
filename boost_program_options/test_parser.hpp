@@ -35,6 +35,7 @@ public:
         _wstrSubscriptionId = node.get<std::string>("subscriptionId", "");
         _wstrAccessToken = node.get<std::string>("accessToken", "");
         _bLeaveMeeting = node.get<bool>("leaveMeeting", false);
+        _bPrintHelp = node.get<bool>("help", false);
         
         this->node = node;
     }
@@ -73,6 +74,7 @@ public:
         && (!has("showUpdateBalloon") || _bShowUpdateBalloon == n.ShowBalloon())
         && (!has("rememberCredentials") || _bRememberCredentials == n.ShouldSaveCredentials())
         && (!has("leaveMeeting") || _bLeaveMeeting == n.IsLeaveMeeting())
+        && (!has("help") || _bPrintHelp == n.DoHelp())
         );
         
     }

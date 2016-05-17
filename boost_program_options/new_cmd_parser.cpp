@@ -192,7 +192,7 @@ void CommandLine::parse_cmdline(const std::string& input) {
     auto handle_join = [this](const std::string& meetingId) {
         _wstrMeetingID = is_meeting_id(meetingId) ? meetingId : "";
     };
-
+    
     options_description session("Conferencing options");
     session.add_options()
     ("host", value<bool>()->zero_tokens(), "Host meeting")
@@ -238,16 +238,26 @@ void CommandLine::parse_cmdline(const std::string& input) {
                      command_line_style::allow_long_disguise).run(),
               vm);
         
+        notify(vm);
+        
         if (vm.count("help")) {
-            std::cout << visible << '\n';
+            std::string product;
+#ifdef FCC
+            product = "FCC";
+#else
+            product = "StartMeeting";
+#endif
+            std::cout << "\nUSAGE: " << product << " [option]" << std::endl;
+            std::cout << visible << std::endl;
+            std::cout << "\n\nEXAMPLE:\n\t" << product << " --join 2-811-111 -n \"myName myLastName\"" << std::endl;
+            
             return;
         }
         
-        notify(vm);
     } catch (error &e) {
         std::cerr << e.what() << std::endl;
     }
-
+    
     if (!validate_options(vm)) {
         _eErrorCode = eWrongCommand;
         _eLoginAction = eNone;
@@ -255,7 +265,7 @@ void CommandLine::parse_cmdline(const std::string& input) {
     }
     
     auto handle_host_studio = [this, &vm](ELoginAction action) {
-
+        
         if (vm.count("s") || vm.count("s1")) {
             if (!_wstrLogin.empty() && !_wstrPass.empty()) {
                 _eCommandType = PARS_HOST;
@@ -278,11 +288,11 @@ void CommandLine::parse_cmdline(const std::string& input) {
     if (vm.count("host")) {
         handle_host_studio(eHost);
     }
-
+    
     if (vm.count("studio")) {
         handle_host_studio(eStudio);
     }
-
+    
     if (vm.count("join")) {
         _eLoginAction = eJoin;
         _eCommandType = PARS_JOIN;

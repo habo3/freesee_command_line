@@ -63,8 +63,8 @@
       </BuildableProductRunnable>
       <CommandLineArguments>
          <CommandLineArgument
-            argument = "/Users/oskryp/Desktop/test_case.txt"
-            isEnabled = "NO">
+            argument = "/Users/oskryp/Desktop/test_case.json"
+            isEnabled = "YES">
          </CommandLineArgument>
       </CommandLineArguments>
       <AdditionalOptions>

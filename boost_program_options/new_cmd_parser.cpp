@@ -102,6 +102,11 @@ bool is_name(const std::string& name)
             name.length() <= MAX_NAME_LENGTH);
 }
 
+bool is_meeting_id(const std::string& meeting)
+{
+    return !meeting.empty();
+}
+
 void CommandLine::parse_cmdline(const std::string& input) {
     
     std::string cmdline = input;
@@ -122,16 +127,16 @@ void CommandLine::parse_cmdline(const std::string& input) {
     
     options_description session("Conferencing options");
     session.add_options()
-    ("host", "Host meeting")
+    ("host", value<bool>()->zero_tokens(), "Host meeting")
+    ("join,j", construct_value<std::string>(&_wstrMeetingID, "meetingId"), "join a meeting")
     ("studio", "start a studio recording")
     ("s", construct_value<std::vector<std::string> >(&credentials, "login password")->multitoken(), "provide credentials to host meeting")
-    ("s1", value<std::string>(), "provide security token to host meeting")
+    ("s1", value<std::string>(&_wstrSecurityToken), "provide security token to host meeting")
     ("t", value<std::vector<std::string> >()->multitoken(), "provide account access token to host meeting")
     (",n", construct_value<std::string>(&_wstrUserName, "\"firstName lastName\""), "sets special name\nshould be used with -s and --join commands")
-    ("join", construct_value<std::string>(&_wstrMeetingID, "meetingId")->implicit_value(""), "join a meeting")
     (",e", value<std::string>(&_wstrUserEmail), "sets email address\nshould be used with --join")
-    (",l", "leave meeting")
-    (",p", "persist user related input")
+    (",l", value<bool>()->zero_tokens(), "leave meeting")
+    (",p", value<bool>()->zero_tokens(), "persist user related input")
     ;
     
     options_description hidden("Hidden options");
@@ -139,9 +144,8 @@ void CommandLine::parse_cmdline(const std::string& input) {
     (",u", value<int>(&_updateCode), "self-update result code (provided by installer)")
     ("st", value<std::string>(), "provide shared token")
     ("shared_token", value<std::string>(), "provide shared token")
-    (",j", value<bool>(), "join flag")
     (",r", value<std::vector<std::string> >(&call_replacement)->multitoken(), "provide call replacement details")
-    (",b", "start broadcast automatically")
+    (",b", value<bool>()->zero_tokens(), "start broadcast automatically")
     ;
     
     options_description visible("Allowed Options");
@@ -166,12 +170,6 @@ void CommandLine::parse_cmdline(const std::string& input) {
     if (vm.count("help"))
         std::cout << visible << '\n';
     
-    std::cout << "== Provided following options: ";
-    for (const auto& it : vm) {
-        std::cout << it.first.c_str() << ", ";
-    }
-    std::cout << std::endl;
-    
     zeroVariables();
     
     _eCommandType = PARS_SHOW_LOGIN_FORM;
@@ -183,6 +181,7 @@ void CommandLine::parse_cmdline(const std::string& input) {
     }
     
     if (vm.count("help")) {
+        return;
     }
     
     if (vm.count("-u")) {
@@ -201,17 +200,24 @@ void CommandLine::parse_cmdline(const std::string& input) {
     
     if (vm.count("s1")) {
         std::string strToken = vm["s1"].as<std::string>();
-        std::string sContent   = base64_decode(strToken.c_str());
-        
-        size_t first_space = sContent.find_first_of(" ");
+        //assert( strToken.empty() );
         
         std::string login;
         std::string password;
-        
-        if (first_space != std::string::npos)
-        {
-            login = sContent.substr(0, first_space);
-            password = sContent.substr(first_space + 1, sContent.length());
+
+        try {
+            std::string sContent = base64_decode(strToken.c_str());
+            size_t first_space = sContent.find_first_of(" ");
+            
+            
+            if (first_space != std::string::npos)
+            {
+                login = sContent.substr(0, first_space);
+                password = sContent.substr(first_space + 1, sContent.length());
+            }
+            
+        } catch (const std::exception& e) {
+            std::cout << e.what() << std::endl;
         }
         
         if (login.length() != 0 || password.length() != 0)
@@ -220,18 +226,24 @@ void CommandLine::parse_cmdline(const std::string& input) {
             _wstrPass = is_password(password) ? password : "";
         }
     }
-
-    if (vm.count("host")) {
-        
-        if (vm.count("s")) {
+    
+    if (vm.count("s")) {
+        if (credentials.size() == 2) {
             std::string login = credentials[0];
             std::string password = credentials[1];
             
             _wstrLogin = is_login(login) ? login : "";
             _wstrPass = is_password(password) ? password : "";
-            
-            _eCommandType = PARS_HOST;
-            _eLoginAction = eHost;
+        }
+    }
+
+    if (vm.count("host")) {
+        
+        if (vm.count("s")) {
+            if (credentials.size() == 2) {
+                _eCommandType = PARS_HOST;
+                _eLoginAction = eHost;
+            }
         }
         
         if (vm.count("s1")) {
@@ -243,17 +255,29 @@ void CommandLine::parse_cmdline(const std::string& input) {
             _eCommandType = PARS_SHOW_LOGIN_FORM;
     }
     
-    if (vm.count("join")) {
-        _eCommandType = PARS_JOIN;
+    while (vm.count("join")) {
         _eLoginAction = eJoin;
         
         if (vm.count("-b"))
             _bIsBroadcastEnabled = true;
         
         if (vm.count("-r")) {
-            _iSessionId = boost::lexical_cast<unsigned int>(call_replacement[0]);
-            _iSessionKey = boost::lexical_cast<unsigned int>(call_replacement[1]);
+            if (call_replacement.size() == 2) {
+                _iSessionId = boost::lexical_cast<unsigned int>(call_replacement[0]);
+                _iSessionKey = boost::lexical_cast<unsigned int>(call_replacement[1]);
+            }
         }
+        
+        if (vm.count("s1") || vm.count("s")) {
+            _eCommandType = PARS_JOIN;
+            _eErrorCode = eWrongCommand;
+            break;
+        }
+        
+        _wstrMeetingID = is_meeting_id(_wstrMeetingID) ? _wstrMeetingID : "";
+        
+        _eCommandType = PARS_JOIN;
+        break;
     }
     
     if (vm.count("studio")) {

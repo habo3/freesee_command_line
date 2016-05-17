@@ -1,0 +1,19 @@
+{
+    "tests": [
+              {
+              "input" : "-u 10",
+              "result": {
+              "updateCode" : 10,
+              "showWhatsNew": true,
+              "showUpdateBalloon": true
+              }
+              },
+              {
+              "input" : "--join --host",
+              "result" :  {
+              "errorCode" : "eWrongCommand",
+              "loginAction" : "none"
+              }
+              }
+              ]
+}

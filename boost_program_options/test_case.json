@@ -1,0 +1,233 @@
+
+{
+	"sample" : { 
+		"input" : "command line options",
+		"result": {
+			"disabled" : "true | false",
+			"should_fail" : "true | false",
+
+			"updateCode" : 0,
+			"showWhatsNew": "true | false",
+			"showUpdateBalloon": "true | false",
+			"isBroadcastEnabled" : "true | false",
+
+			"userName"	: "string",
+			"login" : "string",
+			"password" : "string",
+
+			"securityToken" : "string",
+			"sharedConfigToken" : "string",
+			"subscriptionId" : "string",
+			"accessToken" : "string",
+			"sessionId"   : 0,
+			"sessionKey"  : 0,
+
+			"commandType" : "PARS_HOST|PARS_JOIN|PARS_STUDIO|PARS_NONE",
+			"loginAction" : "eHost|eStudio|eJoin|eNone",
+			"errorCode"	  : "eWrongHostParameters|eWrongJoinParameters|eWrongCommand|eNoError"			
+		}
+	},
+
+
+	"tests": [
+		{
+			"input" : "--help",
+			"result": {
+				"commandType" : "PARS_SHOW_LOGIN_FORM"
+			}
+		},
+
+		{
+			"input" : "-u 4",
+			"result": {
+				"updateCode" : 4,
+				"showWhatsNew": false,
+				"showUpdateBalloon": true
+			}
+		},
+
+		{
+			"input" : "-u 10",
+			"result": {
+				"updateCode" : 10,
+				"showWhatsNew": true,
+				"showUpdateBalloon": true
+			}
+		},
+
+		{
+			"input" : "--host -s email passw -u 10",
+			"result": {
+				"updateCode" : 10,
+				"showWhatsNew": true,
+				"showUpdateBalloon": true,
+				"login" : "email",
+				"password" : "passw",
+				"commandType" : "PARS_HOST",
+				"loginAction" : "eHost"
+			}
+		},
+
+		{
+			"input" : " -u 10 --host -s email passw",
+			"result": {
+				"updateCode" : 10,
+				"showWhatsNew": true,
+				"showUpdateBalloon": true,
+				"login" : "email",
+				"password" : "passw",
+				"commandType" : "PARS_HOST",
+				"loginAction" : "eHost"
+			}
+		},
+
+		{
+			"input" : "--join --host",
+			"result" :  {
+				"errorCode" : "eWrongCommand",
+				"commandType" : "PARS_SHOW_LOGIN_FORM",
+				"loginAction" : "eNone"
+			}
+		},
+
+		{
+			"input" : "--host -s email passw",
+			"result" :  {
+				"commandType" : "PARS_HOST",
+				"loginAction" : "eHost",
+				"login" : "email",
+				"password" : "passw"
+			}
+		},
+
+		{
+			"input" : "--studio -s email passw",
+			"result" :  {
+				"commandType" : "PARS_HOST",
+				"loginAction" : "eStudio",
+				"login" 	  : "email",
+				"password"	  : "passw"
+			}
+		},
+
+		{
+			"input" : "--join meetingid -n \"1st 2nd\"",
+			"result" :  {
+				"commandType" : "PARS_JOIN",
+				"loginAction" : "eJoin",
+				"userName" : "1st 2nd",
+				"meetingId" : "meetingid"
+			}
+		},
+
+		{
+			"input" : "--join meetingId -n \"1st 2nd\" -b",
+			"result" :  {
+				"userName" : "1st 2nd",
+				"loginAction" : "eJoin",
+				"commandType" : "PARS_JOIN",
+				"meetingId" : "meetingId",
+				"isBroadcastEnabled" : true
+
+			}
+		},
+
+		{
+			"input" : "qa-freeconferencecall://-j 123 -s1 bmFtZSBwYXNzd29yZA==",
+			"result" :  {
+				"loginAction" : "eJoin",
+				"commandType" : "PARS_JOIN",
+				"errorCode"   : "eWrongCommand",
+				"securityToken" : "bmFtZSBwYXNzd29yZA==",
+				"login" : "name",
+				"password" : "password",
+				"meetingId" : "123"
+
+			}
+		},
+
+		{
+			"input" : "qa-freeconferencecall://-s1 bmFtZSBwYXNzd29yZA==",
+			"result" :  {
+				"securityToken" : "bmFtZSBwYXNzd29yZA==",
+				"login" : "name",
+				"password" : "password"
+
+			}
+		},
+
+		{
+			"input" : "--host -s1 bmFtZSBwYXNzd29yZA== -n some_name",
+			"result" :  {
+				"userName" : "some_name",
+				"loginAction" : "eHost",
+				"commandType" : "PARS_HOST",
+				"securityToken" : "bmFtZSBwYXNzd29yZA==",
+				"login" : "name",
+				"password" : "password"
+
+			}
+		},
+
+		{
+			"input" : "--host -s1 bmFtZSBwYXNzd29yZA==",
+			"result" :  {
+				"loginAction" : "eHost",
+				"commandType" : "PARS_HOST",
+				"securityToken" : "bmFtZSBwYXNzd29yZA==",
+				"login" : "name",
+				"password" : "password"
+
+			}
+		},
+
+		{
+			"should_fail" : true,
+			"input" : "qa-freeconferencecall://-s1 123",
+			"result" :  {
+				"securityToken" : "123",
+				"errorCode" : "eWrongCommand"
+			}
+		},
+
+		{
+			"should_fail" : true,
+			"input" : "--host -s1 -n some_name",
+			"result" :  {
+				"userName" : "some_name",
+				"loginAction" : "eHost",
+				"commandType" : "PARS_HOST"
+			}
+		},
+
+		{
+			"input" : "--join meeting_id -r 123 456",
+			"result" :  {
+				"meetingId" : "meeting_id",
+				"sessionId" : 123,
+				"sessionKey" : 456
+			}
+		},
+
+		{
+			"input" : "--join meeting_id -r 123",
+			"result" :  {
+				"meetingId" : "meeting_id"
+			}
+		},
+
+		{
+			"should_fail" : true,
+			"input" : "--join meeting_id -r asd 456",
+			"result" :  {
+				"meetingId" : "meeting_id"
+			}
+		}	
+
+
+
+
+
+
+	]
+}

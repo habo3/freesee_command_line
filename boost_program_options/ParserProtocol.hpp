@@ -60,7 +60,9 @@ public:
     
     unsigned int GetSessionId() const { return _iSessionId; }
     unsigned int GetSessionKey() const { return _iSessionKey; }
+
     bool IsBroadcastEnabled() const { return _bIsBroadcastEnabled;}
+    bool IsLeaveMeeting() const {return _bLeaveMeeting; } //true - if passed parameter -l (leave meeting)
     
     StringType GetUserEmail() const { return _wstrUserEmail; }
     EParseLine GetCommandType() const { return _eCommandType; }
@@ -110,6 +112,7 @@ protected:
     bool _bShowWhatsNew;
     bool _bShowUpdateBalloon;
     bool _bRememberCredentials;
+    bool _bLeaveMeeting;
     
     EParseLine _eCommandType;
     EErrorCodes _eErrorCode;

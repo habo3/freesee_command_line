@@ -60,7 +60,6 @@ public:
     
 	//IPC and additional commands
 	bool	IsHostMeeting() {return _bHostMeeting; }		//true - if passed parameter -s (host) and -a (start meeting)
-	bool	IsLeaveMeeting(){return _bLeaveMeeting; }		//true - if passed parameter -l (leave meeting)
 	bool	IsBringToFront(){return _bBringToFront; }		//true - if passed parameter -b (bring app to front)
 	bool	IsRCEnabled(){return _bIsRCEnabled;}			//true - if RemoteControl enabled
 	
@@ -110,7 +109,6 @@ private:
     
 	//IPC and additional commands 
 	bool _bHostMeeting;
-	bool _bLeaveMeeting;
 	bool _bBringToFront;
 	
 	std::wstring _wstrUI;

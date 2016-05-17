@@ -138,7 +138,7 @@ void CommandLine::parse_cmdline(const std::string& input) {
     ("t", construct_value<std::vector<std::string> >(&host_access_token, "subscriptionId accessToken")->multitoken(), "provide account access token to host meeting")
     (",n", construct_value<std::string>(&_wstrUserName, "\"firstName lastName\""), "sets special name\nshould be used with -s and --join commands")
     (",e", value<std::string>(&_wstrUserEmail), "sets email address\nshould be used with --join")
-    (",l", value<bool>()->zero_tokens(), "leave meeting")
+    (",l", value<bool>(&_bLeaveMeeting)->zero_tokens(), "leave meeting")
     (",p", value<bool>(&_bRememberCredentials)->zero_tokens(), "persist user related input")
     ;
     

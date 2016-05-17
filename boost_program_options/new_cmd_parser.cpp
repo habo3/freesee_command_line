@@ -20,6 +20,8 @@ using namespace boost::program_options;
 
 static const int MAX_NAME_LENGTH = 40;
 
+typedef std::vector<std::string> multitoken_type;
+
 template<class T>
 typed_value<T>*
 construct_value(T* v, const char * value_typename)
@@ -130,88 +132,21 @@ void CommandLine::parse_cmdline(const std::string& input) {
     std::vector<std::string> call_replacement;
     std::vector<std::string> host_access_token;
     
-    options_description session("Conferencing options");
-    session.add_options()
-    ("host", value<bool>()->zero_tokens(), "Host meeting")
-    ("join,j", construct_value<std::string>(&_wstrMeetingID, "meetingId"), "join a meeting")
-    ("studio", "start a studio recording")
-    ("s", construct_value<std::vector<std::string> >(&credentials, "login password")->multitoken(), "provide credentials to host meeting")
-    (",n", construct_value<std::string>(&_wstrUserName, "\"firstName lastName\""), "sets special name\nshould be used with -s and --join commands")
-    (",e", value<std::string>(&_wstrUserEmail), "sets email address\nshould be used with --join")
-    (",l", value<bool>(&_bLeaveMeeting)->zero_tokens(), "leave meeting")
-    (",p", value<bool>(&_bRememberCredentials)->zero_tokens(), "persist user related input")
-    ;
-    
-    options_description hidden("Hidden options");
-    hidden.add_options()
-    ("s1", value<std::string>(&_wstrSecurityToken), "provide security token to host meeting")
-    ("t", construct_value<std::vector<std::string> >(&host_access_token, "subscriptionId accessToken")->multitoken(), "provide account access token to host meeting")
-    (",u", value<int>(&_updateCode), "self-update result code (provided by installer)")
-    ("st", value<std::string>(), "provide shared token")
-    ("shared_token", value<std::string>(), "provide shared token")
-    (",r", construct_value<std::vector<std::string> >(&call_replacement, "sessionId sessionKey")->multitoken(), "provide call replacement details")
-    (",b", value<bool>()->zero_tokens(), "start broadcast automatically")
-    ;
-    
-    options_description all("Allowed Options");
-    all.add(generic).add(session).add(hidden);
-    
-    options_description visible;
-    visible.add(generic).add(session);
-    
-    variables_map vm;
-    
-#ifdef _WIN32
-    std::vector<std::string> pars_str = split_winmain(cmdline);
-#else
-    std::vector<std::string> pars_str = split_unix(cmdline);
-#endif
-    
-    store(command_line_parser(pars_str)
-          .options(all)
-          .style(
-                 command_line_style::unix_style |
-                 command_line_style::allow_long_disguise).run(),
-          vm);
-    notify(vm);
-    
-    if (vm.count("help"))
-        std::cout << visible << '\n';
-    
-    if (!validate_options(vm)) {
-        _eErrorCode = eWrongCommand;
-        _eLoginAction = eNone;
-        return;
-    }
-    
-    if (vm.count("help")) {
-        return;
-    }
-    
-    if (vm.count("-u")) {
-        _updateCode = vm["-u"].as<int>();
+    auto handle_n = [this](const std::string& name){ _wstrUserName = (is_name(name) ? name : ""); };
+    auto handle_e = [this](const std::string& email) { _wstrUserEmail = is_email(email) ? email : ""; };
+    auto handle_updateCode = [this](int v) {
+        _updateCode = v;
         _bShowUpdateBalloon = true;
         _bShowWhatsNew = (_updateCode == 10);
-    }
+    };
     
-    if (vm.count("-n")) {
-        _wstrUserName = (is_name(_wstrUserName) ? _wstrUserName : "");
-    }
-    
-    if (vm.count("-e") ) {
-        _wstrUserEmail = is_email(_wstrUserEmail) ? _wstrUserName : "";
-    }
-    
-    if (vm.count("s1")) {
-        std::string strToken = vm["s1"].as<std::string>();
-        
+    auto handle_s1 = [this](const std::string &token) {
         std::string login;
         std::string password;
         
         try {
-            std::string sContent = base64_decode(strToken.c_str());
+            std::string sContent = base64_decode(token.c_str());
             size_t first_space = sContent.find_first_of(" ");
-            
             
             if (first_space != std::string::npos)
             {
@@ -228,72 +163,133 @@ void CommandLine::parse_cmdline(const std::string& input) {
             _wstrLogin = is_login(login) ? login : "";
             _wstrPass = is_password(password) ? password : "";
         }
-    }
+    };
     
-    if (vm.count("s")) {
-        if (credentials.size() == 2) {
-            std::string login = credentials[0];
-            std::string password = credentials[1];
+    auto handle_s = [this](const multitoken_type& values) {
+        if (values.size() == 2) {
+            std::string login = values[0];
+            std::string password = values[1];
             
             _wstrLogin = is_login(login) ? login : "";
             _wstrPass = is_password(password) ? password : "";
         }
+    };
+    
+    auto handle_r = [this](const multitoken_type& values) {
+        if (values.size() == 2) {
+            _iSessionId = boost::lexical_cast<unsigned int>(values[0]);
+            _iSessionKey = boost::lexical_cast<unsigned int>(values[1]);
+        }
+    };
+    
+    auto handle_t = [this](const multitoken_type& values) {
+        if (values.size() == 2) {
+            _wstrSubscriptionId = values[0];
+            _wstrAccessToken = values[1];
+        }
+    };
+    
+    auto handle_join = [this](const std::string& meetingId) {
+        _wstrMeetingID = is_meeting_id(meetingId) ? meetingId : "";
+    };
+
+    options_description session("Conferencing options");
+    session.add_options()
+    ("host", value<bool>()->zero_tokens(), "Host meeting")
+    ("join,j", construct_value<std::string>(&_wstrMeetingID, "meetingId")->notifier(handle_join), "join a meeting")
+    ("studio", "start a studio recording")
+    ("s", construct_value<multitoken_type>(&credentials, "login password")->multitoken()->notifier(handle_s), "provide credentials to host meeting")
+    (",n", construct_value<std::string>(&_wstrUserName, "\"firstName lastName\"")->notifier(handle_n), "sets special name\nshould be used with -s and --join commands")
+    (",e", value<std::string>(&_wstrUserEmail)->notifier(handle_e), "sets email address\nshould be used with --join")
+    (",l", value<bool>(&_bLeaveMeeting)->zero_tokens(), "leave meeting")
+    (",p", value<bool>(&_bRememberCredentials)->zero_tokens(), "persist user related input")
+    ;
+    
+    options_description hidden("Hidden options");
+    hidden.add_options()
+    ("s1", value<std::string>(&_wstrSecurityToken)->notifier(handle_s1), "provide security token to host meeting")
+    ("t", construct_value<multitoken_type>(&host_access_token, "subscriptionId accessToken")->multitoken()->notifier(handle_t), "provide account access token to host meeting")
+    (",u", value<int>(&_updateCode)->notifier(handle_updateCode), "self-update result code (provided by installer)")
+    ("st", value<std::string>(), "provide shared token")
+    ("shared_token", value<std::string>(), "provide shared token")
+    (",r", construct_value<multitoken_type>(&call_replacement, "sessionId sessionKey")->multitoken()->notifier(handle_r), "provide call replacement details")
+    (",b", value<bool>(&_bIsBroadcastEnabled)->zero_tokens(), "start broadcast automatically")
+    ;
+    
+    options_description all("Allowed Options");
+    all.add(generic).add(session).add(hidden);
+    
+    options_description visible;
+    visible.add(generic).add(session);
+    
+#ifdef _WIN32
+    std::vector<std::string> pars_str = split_winmain(cmdline);
+#else
+    std::vector<std::string> pars_str = split_unix(cmdline);
+#endif
+    
+    variables_map vm;
+    
+    try {
+        store(command_line_parser(pars_str)
+              .options(all)
+              .style(
+                     command_line_style::unix_style |
+                     command_line_style::allow_long_disguise).run(),
+              vm);
+        
+        if (vm.count("help")) {
+            std::cout << visible << '\n';
+            return;
+        }
+        
+        notify(vm);
+    } catch (error &e) {
+        std::cerr << e.what() << std::endl;
+    }
+
+    if (!validate_options(vm)) {
+        _eErrorCode = eWrongCommand;
+        _eLoginAction = eNone;
+        return;
     }
     
-    if (vm.count("host")) {
-        
-        if (vm.count("s")) {
-            if (credentials.size() == 2) {
+    auto handle_host_studio = [this, &vm](ELoginAction action) {
+
+        if (vm.count("s") || vm.count("s1")) {
+            if (!_wstrLogin.empty() && !_wstrPass.empty()) {
                 _eCommandType = PARS_HOST;
-                _eLoginAction = eHost;
+                _eLoginAction = action;
             }
         }
         
-        if (vm.count("s1")) {
-            _eCommandType = PARS_HOST;
-            _eLoginAction = eHost;
-        }
-        
         if (vm.count("t")) {
-            if (host_access_token.size() == 2) {
-                _wstrSubscriptionId = host_access_token[0];
-                _wstrAccessToken = host_access_token[1];
+            if (!_wstrSubscriptionId.empty() && !_wstrAccessToken.empty()) {
                 _eCommandType = PARS_HOST_TOKEN;
-                _eLoginAction = eHost;
+                _eLoginAction = action;
             }
         }
         
         if (_eLoginAction == eNone && _eCommandType != PARS_LEAVE)
             _eCommandType = PARS_SHOW_LOGIN_FORM;
-    }
+        
+    };
     
-    while (vm.count("join")) {
-        _eLoginAction = eJoin;
-        
-        if (vm.count("-b"))
-            _bIsBroadcastEnabled = true;
-        
-        if (vm.count("-r")) {
-            if (call_replacement.size() == 2) {
-                _iSessionId = boost::lexical_cast<unsigned int>(call_replacement[0]);
-                _iSessionKey = boost::lexical_cast<unsigned int>(call_replacement[1]);
-            }
-        }
-        
-        if (vm.count("s1") || vm.count("s")) {
-            _eCommandType = PARS_JOIN;
-            _eErrorCode = eWrongCommand;
-            break;
-        }
-        
-        _wstrMeetingID = is_meeting_id(_wstrMeetingID) ? _wstrMeetingID : "";
-        
-        _eCommandType = PARS_JOIN;
-        break;
+    if (vm.count("host")) {
+        handle_host_studio(eHost);
     }
-    
+
     if (vm.count("studio")) {
-        _eCommandType = PARS_HOST;
-        _eLoginAction = eStudio;
+        handle_host_studio(eStudio);
     }
+
+    if (vm.count("join")) {
+        _eLoginAction = eJoin;
+        _eCommandType = PARS_JOIN;
+        
+        if (vm.count("s1") || vm.count("s") || vm.count("t") || !_wstrMeetingID.empty()) {
+            _eErrorCode = eWrongCommand;
+        }
+    }
+    
 }

@@ -232,11 +232,18 @@
 		},
 
 		{
-			"input": "--host -t 1234 1234",
+			"input": "--host -t 12341234",
 			"result" : {
-				"subscriptionId" : "1234",
-				"accessToken" : "1234",
+				"sharedConfigToken" : "12341234",
 				"commandType" : "PARS_HOST_TOKEN"
+			}
+		},
+
+		{
+			"input" : "qa-freeconferencecall://-t #sharedconfigtoken",
+			"result" :  {
+				"sharedConfigToken" : "#sharedconfigtoken",
+				"commandType" : "PARS_SHOW_LOGIN_FORM"
 			}
 		}
 

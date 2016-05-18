@@ -182,11 +182,8 @@ void CommandLine::parse_cmdline(const std::string& input) {
         }
     };
     
-    auto handle_t = [this](const multitoken_type& values) {
-        if (values.size() == 2) {
-            _wstrSubscriptionId = values[0];
-            _wstrAccessToken = values[1];
-        }
+    auto handle_t = [this](const std::string& value) {
+        _wstrSharedConfigToken = value;
     };
     
     auto handle_join = [this](const std::string& meetingId) {
@@ -208,10 +205,10 @@ void CommandLine::parse_cmdline(const std::string& input) {
     options_description hidden("Hidden options");
     hidden.add_options()
     ("s1", value<std::string>(&_wstrSecurityToken)->notifier(handle_s1), "provide security token to host meeting")
-    ("t", construct_value<multitoken_type>(&host_access_token, "subscriptionId accessToken")->multitoken()->notifier(handle_t), "provide account access token to host meeting")
+    ("t", value<std::string>()->notifier(handle_t), "provide sharedConfig token for meeting")
     (",u", value<int>(&_updateCode)->notifier(handle_updateCode), "self-update result code (provided by installer)")
-    ("st", value<std::string>(), "provide shared token")
-    ("shared_token", value<std::string>(), "provide shared token")
+    ("st", value<std::string>()->notifier(handle_t), "provide shared token")
+    ("shared_token", value<std::string>()->notifier(handle_t), "provide shared token")
     (",r", construct_value<multitoken_type>(&call_replacement, "sessionId sessionKey")->multitoken()->notifier(handle_r), "provide call replacement details")
     (",b", value<bool>(&_bIsBroadcastEnabled)->zero_tokens(), "start broadcast automatically")
     ;
@@ -273,12 +270,10 @@ void CommandLine::parse_cmdline(const std::string& input) {
             }
         }
         
-        if (vm.count("t")) {
-            if (!_wstrSubscriptionId.empty() && !_wstrAccessToken.empty()) {
-                _eCommandType = PARS_HOST_TOKEN;
-                _eLoginAction = action;
-            }
-        }
+//        if (vm.count("t")) {
+//            _eCommandType = PARS_HOST_TOKEN;
+//            _eLoginAction = action;
+//        }
         
         if (_eLoginAction == eNone && _eCommandType != PARS_LEAVE)
             _eCommandType = PARS_SHOW_LOGIN_FORM;

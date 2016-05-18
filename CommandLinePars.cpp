@@ -1347,6 +1347,8 @@ CCommandLinePars::ZeroVariables()
 #ifndef FSS_PRODUCTION
 	_bIsQAServer = true;
 #endif
+    
+    zeroVariables();
 
 };
 

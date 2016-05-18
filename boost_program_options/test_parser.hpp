@@ -34,6 +34,7 @@ public:
         _wstrSharedConfigToken = node.get<std::string>("sharedConfigToken", "");
         _wstrSubscriptionId = node.get<std::string>("subscriptionId", "");
         _wstrAccessToken = node.get<std::string>("accessToken", "");
+        _wstrPhone = node.get<std::string>("phone", "");
         _bLeaveMeeting = node.get<bool>("leaveMeeting", false);
         _bPrintHelp = node.get<bool>("help", false);
         
@@ -74,6 +75,7 @@ public:
         && (!has("showUpdateBalloon") || _bShowUpdateBalloon == n.ShowBalloon())
         && (!has("rememberCredentials") || _bRememberCredentials == n.ShouldSaveCredentials())
         && (!has("leaveMeeting") || _bLeaveMeeting == n.IsLeaveMeeting())
+        && (!has("phone") || _wstrPhone == n.GetPhoneNumber())
         && (!has("help") || _bPrintHelp == n.DoHelp())
         );
         

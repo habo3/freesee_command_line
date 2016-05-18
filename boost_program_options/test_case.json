@@ -232,10 +232,12 @@
 		},
 
 		{
-			"input": "--host -t 12341234",
+			"input": "--host -t subscription access",
 			"result" : {
-				"sharedConfigToken" : "12341234",
-				"commandType" : "PARS_HOST_TOKEN"
+				"accessToken" : "access",
+				"subscriptionId": "subscription",
+				"commandType" : "PARS_HOST_TOKEN",
+				"loginAction" : "eHost"
 			}
 		},
 
@@ -245,7 +247,19 @@
 				"sharedConfigToken" : "#sharedconfigtoken",
 				"commandType" : "PARS_SHOW_LOGIN_FORM"
 			}
+		},
+
+		{
+			"input": "--host -t subscription access -phone 123-45-67",
+			"result" : {
+				"accessToken" : "access",
+				"subscriptionId": "subscription",
+				"phone" : "123-45-67",
+				"commandType" : "PARS_HOST_TOKEN",
+				"loginAction" : "eHost"
+			}
 		}
+
 
 	]
 }

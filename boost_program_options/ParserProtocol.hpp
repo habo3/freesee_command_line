@@ -54,6 +54,7 @@ public:
     StringType GetMeetingID() const { return _wstrMeetingID; }
     StringType GetLogin() const { return _wstrLogin; }
     StringType GetPass() const { return _wstrPass; }
+    StringType GetPhoneNumber() const { return _wstrPhone; }
     
     const StringType& GetSubscriptionId() const { return _wstrSubscriptionId; }
     const StringType& GetAccessToken() const { return _wstrAccessToken; }
@@ -96,6 +97,7 @@ public:
 protected:
     friend class Tester;
     
+    StringType _wstrPhone;
     StringType _wstrMeetingID;
     StringType _wstrConnectIP;
     StringType _wstrUserName;

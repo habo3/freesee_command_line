@@ -101,6 +101,10 @@ bool is_meeting_id(const std::string& meeting)
     return !meeting.empty();
 }
 
+bool is_phone_number(const std::string& number) {
+    return true;
+}
+
 #pragma mark - parser implementaion
 void CommandLine::parse_cmdline(int argc, const char *argv[]) {
     std::stringstream ss;
@@ -187,16 +191,20 @@ void CommandLine::parse_cmdline(const std::string& input) {
     auto handle_t = [this](const std::string& value) {
         _wstrSharedConfigToken = value;
     };
-
+    
     auto handle_t_no_scheme = [this](const multitoken_type& values) {
-            if (values.size() == 2) {
-                _wstrSubscriptionId = values[0];
-                _wstrAccessToken = values[1];
-            }
+        if (values.size() == 2) {
+            _wstrSubscriptionId = values[0];
+            _wstrAccessToken = values[1];
+        }
     };
-
+    
     auto handle_join = [this](const std::string& meetingId) {
         _wstrMeetingID = is_meeting_id(meetingId) ? meetingId : "";
+    };
+    
+    auto handle_phone = [this](const std::string& phone) {
+        _wstrPhone = is_phone_number(phone) ? phone : "";
     };
     
     options_description session("Conferencing options");
@@ -204,7 +212,7 @@ void CommandLine::parse_cmdline(const std::string& input) {
     ("host", value<bool>()->zero_tokens(), "Host meeting")
     ("join,j", construct_value<std::string>(&_wstrMeetingID, "meetingId")->notifier(handle_join), "join a meeting")
     ("studio", "start a studio recording")
-    ("s", construct_value<multitoken_type>(&credentials, "login password")->multitoken()->notifier(handle_s), "provide credentials to host meeting")
+    (",s", construct_value<multitoken_type>(&credentials, "login password")->multitoken()->notifier(handle_s), "provide credentials to host meeting")
     (",n", construct_value<std::string>(&_wstrUserName, "\"firstName lastName\"")->notifier(handle_n), "sets special name\nshould be used with -s and --join commands")
     (",e", value<std::string>(&_wstrUserEmail)->notifier(handle_e), "sets email address\nshould be used with --join")
     (",l", value<bool>(&_bLeaveMeeting)->zero_tokens(), "leave meeting")
@@ -219,20 +227,21 @@ void CommandLine::parse_cmdline(const std::string& input) {
     ("shared_token", value<std::string>()->notifier(handle_t), "provide shared token")
     (",r", construct_value<multitoken_type>(&call_replacement, "sessionId sessionKey")->multitoken()->notifier(handle_r), "provide call replacement details")
     (",b", value<bool>(&_bIsBroadcastEnabled)->zero_tokens(), "start broadcast automatically")
+    ("phone", value<std::string>()->notifier(handle_phone), "provide phone number to join the meeting")
     ;
-
+    
     if (url_scheme.empty())
         hidden.add_options()
-        ("t", construct_value<multitoken_type>(&host_access_token, "subscriptionId accessToken")->multitoken()->notifier(handle_t_no_scheme), "provide account access token to host meeting");
+        (",t", construct_value<multitoken_type>(&host_access_token, "subscriptionId accessToken")->multitoken()->notifier(handle_t_no_scheme), "provide account access token to host meeting");
     else
         hidden.add_options()
-        ("t", value<std::string>()->notifier(handle_t), "provide sharedConfig token for meeting");
+        (",t", value<std::string>()->notifier(handle_t), "provide sharedConfig token for meeting");
     
     options_description all("Allowed Options");
     all.add(generic).add(session).add(hidden);
     
     options_description visible;
-    visible.add(generic).add(session);
+    visible.add(generic).add(session).add(hidden);
     
 #ifdef _WIN32
     std::vector<std::string> pars_str = split_winmain(cmdline);
@@ -246,7 +255,7 @@ void CommandLine::parse_cmdline(const std::string& input) {
         store(command_line_parser(pars_str)
               .options(all)
               .style(
-                     command_line_style::unix_style |
+                     (command_line_style::unix_style & ~command_line_style::allow_guessing) |
                      command_line_style::allow_long_disguise).run(),
               vm);
         
@@ -278,14 +287,14 @@ void CommandLine::parse_cmdline(const std::string& input) {
     
     auto handle_host_studio = [this, &vm](ELoginAction action) {
         
-        if (vm.count("s") || vm.count("s1")) {
+        if (vm.count("-s") || vm.count("s1")) {
             if (!_wstrLogin.empty() && !_wstrPass.empty()) {
                 _eCommandType = PARS_HOST;
                 _eLoginAction = action;
             }
         }
         
-        if (vm.count("t")) {
+        if (vm.count("-t")) {
             _eCommandType = PARS_HOST_TOKEN;
             _eLoginAction = action;
         }
@@ -307,7 +316,7 @@ void CommandLine::parse_cmdline(const std::string& input) {
         _eLoginAction = eJoin;
         _eCommandType = PARS_JOIN;
         
-        if (vm.count("s1") || vm.count("s") || vm.count("t") || !_wstrMeetingID.empty()) {
+        if (vm.count("s1") || vm.count("-s") || vm.count("-t") || !_wstrMeetingID.empty()) {
             _eErrorCode = eWrongCommand;
         }
     }

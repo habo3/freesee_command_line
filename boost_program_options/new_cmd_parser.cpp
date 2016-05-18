@@ -115,10 +115,12 @@ void CommandLine::parse_cmdline(const std::string& input) {
     
     zeroVariables();
     
+    std::string url_scheme;
     std::string cmdline = input;
     if (cmdline.find("://") != std::string::npos) {
         std::vector<std::string> url_items;
         boost::iter_split(url_items, cmdline, boost::algorithm::first_finder("://"));
+        url_scheme = url_items[0];
         cmdline = url_items[1];
     }
     
@@ -185,7 +187,14 @@ void CommandLine::parse_cmdline(const std::string& input) {
     auto handle_t = [this](const std::string& value) {
         _wstrSharedConfigToken = value;
     };
-    
+
+    auto handle_t_no_scheme = [this](const multitoken_type& values) {
+            if (values.size() == 2) {
+                _wstrSubscriptionId = values[0];
+                _wstrAccessToken = values[1];
+            }
+    };
+
     auto handle_join = [this](const std::string& meetingId) {
         _wstrMeetingID = is_meeting_id(meetingId) ? meetingId : "";
     };
@@ -205,13 +214,19 @@ void CommandLine::parse_cmdline(const std::string& input) {
     options_description hidden("Hidden options");
     hidden.add_options()
     ("s1", value<std::string>(&_wstrSecurityToken)->notifier(handle_s1), "provide security token to host meeting")
-    ("t", value<std::string>()->notifier(handle_t), "provide sharedConfig token for meeting")
     (",u", value<int>(&_updateCode)->notifier(handle_updateCode), "self-update result code (provided by installer)")
     ("st", value<std::string>()->notifier(handle_t), "provide shared token")
     ("shared_token", value<std::string>()->notifier(handle_t), "provide shared token")
     (",r", construct_value<multitoken_type>(&call_replacement, "sessionId sessionKey")->multitoken()->notifier(handle_r), "provide call replacement details")
     (",b", value<bool>(&_bIsBroadcastEnabled)->zero_tokens(), "start broadcast automatically")
     ;
+
+    if (url_scheme.empty())
+        hidden.add_options()
+        ("t", construct_value<multitoken_type>(&host_access_token, "subscriptionId accessToken")->multitoken()->notifier(handle_t_no_scheme), "provide account access token to host meeting");
+    else
+        hidden.add_options()
+        ("t", value<std::string>()->notifier(handle_t), "provide sharedConfig token for meeting");
     
     options_description all("Allowed Options");
     all.add(generic).add(session).add(hidden);
@@ -270,10 +285,10 @@ void CommandLine::parse_cmdline(const std::string& input) {
             }
         }
         
-//        if (vm.count("t")) {
-//            _eCommandType = PARS_HOST_TOKEN;
-//            _eLoginAction = action;
-//        }
+        if (vm.count("t")) {
+            _eCommandType = PARS_HOST_TOKEN;
+            _eLoginAction = action;
+        }
         
         if (_eLoginAction == eNone && _eCommandType != PARS_LEAVE)
             _eCommandType = PARS_SHOW_LOGIN_FORM;

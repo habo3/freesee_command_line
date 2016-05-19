@@ -61,10 +61,6 @@ bool validate_options(variables_map& vm) {
 }
 
 #pragma mark - validation helpers
-bool is_urlscheme(const std::string& string) {
-    return string.find("://") != std::string::npos;
-}
-
 bool is_login(const std::string& login)
 {
     const boost::regex regex("[a-zA-Z0-9_\\-\\.@]{1,}");
@@ -105,6 +101,13 @@ bool is_phone_number(const std::string& number) {
     return true;
 }
 
+bool is_urlscheme(const std::string& scheme) {
+    static const std::string INVALID_NAME_SYMBOLS = " %\"&*";
+    return (static_cast<int>(scheme.find_first_of(INVALID_NAME_SYMBOLS)) == -1 &&
+            scheme.length() <= MAX_NAME_LENGTH);
+
+}
+
 #pragma mark - parser implementaion
 void CommandLine::parse_cmdline(int argc, const char *argv[]) {
     std::stringstream ss;
@@ -124,8 +127,10 @@ void CommandLine::parse_cmdline(const std::string& input) {
     if (cmdline.find("://") != std::string::npos) {
         std::vector<std::string> url_items;
         boost::iter_split(url_items, cmdline, boost::algorithm::first_finder("://"));
-        url_scheme = url_items[0];
-        cmdline = url_items[1];
+        if (is_urlscheme(url_items[0])) {
+            url_scheme = url_items[0];
+            cmdline = url_items[1];
+        }
     }
     
     std::vector<std::string> credentials;

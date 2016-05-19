@@ -128,12 +128,6 @@ void CommandLine::parse_cmdline(const std::string& input) {
         cmdline = url_items[1];
     }
     
-    options_description desc("Options");
-    
-    options_description generic("Generic options");
-    generic.add_options()
-    ("help,h", value<bool>(&_bPrintHelp)->zero_tokens(), "Help screen");
-    
     std::vector<std::string> credentials;
     std::vector<std::string> call_replacement;
     std::vector<std::string> host_access_token;
@@ -203,45 +197,81 @@ void CommandLine::parse_cmdline(const std::string& input) {
         _wstrMeetingID = is_meeting_id(meetingId) ? meetingId : "";
     };
     
+    auto handle_sbc = [this](const std::string& meetingId) {
+        _wstrSbcParameter = meetingId;
+    };
+    
     auto handle_phone = [this](const std::string& phone) {
         _wstrPhone = is_phone_number(phone) ? phone : "";
     };
     
-    options_description session("Conferencing options");
-    session.add_options()
+    options_description host_options("Host options");
+    host_options.add_options()
     ("host", value<bool>()->zero_tokens(), "Host meeting")
-    ("join,j", construct_value<std::string>(&_wstrMeetingID, "meetingId")->notifier(handle_join), "join a meeting")
     ("studio", "start a studio recording")
-    (",s", construct_value<multitoken_type>(&credentials, "login password")->multitoken()->notifier(handle_s), "provide credentials to host meeting")
-    (",n", construct_value<std::string>(&_wstrUserName, "\"firstName lastName\"")->notifier(handle_n), "sets special name\nshould be used with -s and --join commands")
-    (",e", value<std::string>(&_wstrUserEmail)->notifier(handle_e), "sets email address\nshould be used with --join")
-    (",l", value<bool>(&_bLeaveMeeting)->zero_tokens(), "leave meeting")
-    (",p", value<bool>(&_bRememberCredentials)->zero_tokens(), "persist user related input")
-    ;
+    (",s", construct_value<multitoken_type>(&credentials, "login password")->multitoken()->notifier(handle_s), "provide credentials to host meeting");
     
-    options_description hidden("Hidden options");
-    hidden.add_options()
-    ("s1", value<std::string>(&_wstrSecurityToken)->notifier(handle_s1), "provide security token to host meeting")
-    (",u", value<int>(&_updateCode)->notifier(handle_updateCode), "self-update result code (provided by installer)")
-    ("st", value<std::string>()->notifier(handle_t), "provide shared token")
-    ("shared_token", value<std::string>()->notifier(handle_t), "provide shared token")
+    options_description host_hidden("Host advanced options");
+    host_hidden.add_options()
+    ("s1", value<std::string>(&_wstrSecurityToken)->notifier(handle_s1), "provide security token to host meeting");
+    
+    if (url_scheme.empty()) {
+        host_hidden.add_options()
+        (",t", construct_value<multitoken_type>(&host_access_token, "subscriptionId accessToken")->multitoken()->notifier(handle_t_no_scheme), "provide account access token to host meeting");
+    }
+    
+    options_description join_options("Join options");
+    join_options.add_options()
+    ("join,j", construct_value<std::string>(&_wstrMeetingID, "meetingId")->notifier(handle_join), "join a meeting")
+    (",n", construct_value<std::string>(&_wstrUserName, "\"firstName lastName\"")->notifier(handle_n), "sets special name\nshould be used with -s and --join commands")
+    (",e", value<std::string>(&_wstrUserEmail)->notifier(handle_e), "sets email address\nshould be used with --join");
+    
+    options_description join_hidden("Join advanced options");
+    join_hidden.add_options()
     (",r", construct_value<multitoken_type>(&call_replacement, "sessionId sessionKey")->multitoken()->notifier(handle_r), "provide call replacement details")
     (",b", value<bool>(&_bIsBroadcastEnabled)->zero_tokens(), "start broadcast automatically")
     ("phone", value<std::string>()->notifier(handle_phone), "provide phone number to join the meeting")
     ;
     
-    if (url_scheme.empty())
-        hidden.add_options()
-        (",t", construct_value<multitoken_type>(&host_access_token, "subscriptionId accessToken")->multitoken()->notifier(handle_t_no_scheme), "provide account access token to host meeting");
-    else
-        hidden.add_options()
+    options_description generic("Generic options");
+    generic.add_options()
+    ("help,h", value<bool>(&_bPrintHelp)->zero_tokens(), "Help screen")
+    (",l", value<bool>(&_bLeaveMeeting)->zero_tokens(), "leave meeting")
+    (",p", value<bool>(&_bRememberCredentials)->zero_tokens(), "persist user related input")
+    ;
+
+    options_description additional_hidden("Generic advanced options");
+    additional_hidden.add_options()
+    (",u", value<int>(&_updateCode)->notifier(handle_updateCode), "self-update result code (provided by installer)")
+    ("st", value<std::string>()->notifier(handle_t), "provide shared token")
+    ("shared_token", value<std::string>()->notifier(handle_t), "provide shared token")
+    ("sbc", value<std::string>()->notifier(handle_sbc), "provide sbc")
+    ;
+    
+    if (!url_scheme.empty()) {
+        additional_hidden.add_options()
         (",t", value<std::string>()->notifier(handle_t), "provide sharedConfig token for meeting");
+    }
+    
+    options_description desc("Options");
     
     options_description all("Allowed Options");
-    all.add(generic).add(session).add(hidden);
+    all.add(host_options).add(host_hidden).add(join_options).add(join_hidden).add(generic).add(additional_hidden);
     
     options_description visible;
-    visible.add(generic).add(session).add(hidden);
+    visible.add(host_options)
+#ifndef NDEBUG
+    .add(host_hidden)
+#endif
+    .add(join_options)
+#ifndef NDEBUG
+    .add(join_hidden)
+#endif
+    .add(generic)
+#ifndef NDEBUG
+    .add(additional_hidden)
+#endif
+    ;
     
 #ifdef _WIN32
     std::vector<std::string> pars_str = split_winmain(cmdline);

@@ -250,15 +250,30 @@
 		},
 
 		{
-			"input": "--host -t subscription access -phone 123-45-67",
+			"input": "--host -t subscription access -phone 123-45-67 -sbc 1-2-4-5",
 			"result" : {
 				"accessToken" : "access",
 				"subscriptionId": "subscription",
 				"phone" : "123-45-67",
+				"sbc": "1-2-4-5",
 				"commandType" : "PARS_HOST_TOKEN",
 				"loginAction" : "eHost"
 			}
+		},
+
+		{
+			"input": "--host -s vrgb@a.bc q -sbc HTTPS://qa-sbc.freeconferencecall.com/fcc2.1/",
+			"result" : {
+				"sbc" : "HTTPS://qa-sbc.freeconferencecall.com/fcc2.1/",
+				"loginAction" : "eHost",
+				"commandType" : "PARS_HOST",
+				"loginAction" : "eStudio",
+				"login" 	  : "vrgb@a.bc",
+				"password"	  : "q"
+
+			}
 		}
+
 
 
 	]

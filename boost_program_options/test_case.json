@@ -272,6 +272,21 @@
 				"password"	  : "q"
 
 			}
+		},
+
+		{
+			"input": "--join vrgb -n Chrome -e vr@a.bc -r 100003723 2371069188 -sbc \"HTTPS://qa-sbc.freeconferencecall.com/fcc2.1/\" -phone 380893239969 -b",
+			"result" : {
+				"sbc" : "HTTPS://qa-sbc.freeconferencecall.com/fcc2.1/",
+				"email" 	  : "vr@a.bc",
+				"name"		  : "Chrome",
+				"meetingid"   : "vrgb",
+				"sessionId"	  : "100003723",
+				"sessionKey"  : "2371069188",
+				"phone"		  : "380893239969",
+				"isBroadcastEnabled" : true
+
+			}
 		}
 
 

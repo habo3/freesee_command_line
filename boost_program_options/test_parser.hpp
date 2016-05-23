@@ -15,8 +15,8 @@ public:
         _bIsBroadcastEnabled = node.get<bool>("isBroadcastEnabled", false);
         _bRememberCredentials = node.get<bool>("rememberCredentials", false);
 
-        _iSessionId = node.get<int>("sessionId", 0);
-        _iSessionKey = node.get<int>("sessionKey", 0);
+        _iSessionId = node.get<unsigned int>("sessionId", 0);
+        _iSessionKey = node.get<unsigned int>("sessionKey", 0);
         _iConnectPort = node.get<int>("connectPort", 0);
         
         _eCommandType = jsonToCommand(node.get<std::string>("commandType" , "PARS_UNKNOWN"));
